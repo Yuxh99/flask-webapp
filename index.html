@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新年烟花祝福</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        #fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 3em;
+            text-align: center;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="fireworks"></canvas>
+    <div id="message">
+        <span>新年快乐！愿新的一年如烟花般灿烂！</span>
+    </div>
+    <audio id="fireworks-music" autoplay loop>
+        <source src="fireworks.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+    <script>
+        const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const fireworks = [];
+        const particles = [];
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function createFirework() {
+            const x = random(0, canvas.width);
+            const y = canvas.height;
+            const targetY = random(0, canvas.height * 0.5);
+            const color = `hsl(${random(0, 360)}, 100%, 50%)`;
+            const type = Math.random() < 0.25 ? 'circle' : Math.random() < 0.5 ? 'trail' : Math.random() < 0.75 ? 'blink' : 'explode'; // 25% 的概率生成圆形烟花，25% 的概率生成拖尾烟花，25% 的概率生成闪烁烟花，25% 的概率生成爆炸烟花
+            fireworks.push({
+                x,
+                y,
+                targetY,
+                color,
+                speed: random(2, 5),
+                size: random(3, 6),
+                type
+            });
+        }
+
+        function updateFireworks() {
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const firework = fireworks[i];
+                firework.y -= firework.speed;
+                if (firework.y <= firework.targetY) {
+                    explode(firework.x, firework.y, firework.color, firework.type);
+                    fireworks.splice(i, 1);
+                }
+            }
+        }
+
+        function explode(x, y, color, type) {
+            const numParticles = type === 'circle' ? 100 : type === 'trail' ? 150 : type === 'blink' ? 80 : 120; // 圆形烟花生成 100 个粒子，拖尾烟花生成 150 个粒子，闪烁烟花生成 80 个粒子，爆炸烟花生成 120 个粒子
+            for (let i = 0; i < numParticles; i++) {
+                const angle = random(0, Math.PI * 2);
+                const speed = random(2, 7);
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push({
+                    x,
+                    y,
+                    color,
+                    vx,
+                    vy,
+                    life: random(30, 60),
+                    type
+                });
+            }
+            if (type === 'explode') {
+                playExplosionSound();
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life--;
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const firework of fireworks) {
+                ctx.beginPath();
+                ctx.arc(firework.x, firework.y, firework.size, 0, Math.PI * 2);
+                ctx.fillStyle = firework.color;
+                ctx.fill();
+            }
+            for (const particle of particles) {
+                ctx.beginPath();
+                if (particle.type === 'circle') {
+                    ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                } else if (particle.type === 'trail') {
+                    ctx.moveTo(particle.x, particle.y);
+                    ctx.lineTo(particle.x - particle.vx * 5, particle.y - particle.vy * 5); // 绘制拖尾效果
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = particle.color;
+                    ctx.stroke();
+                } else if (particle.type === 'blink') {
+                    ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                    ctx.globalAlpha = Math.random() < 0.5 ? 0.5 : 1; // 闪烁效果
+                } else if (particle.type === 'explode') {
+                    ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                }
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                ctx.globalAlpha = 1; // 恢复全局透明度
+            }
+        }
+
+        function animate() {
+            if (random(0, 1) < 0.1) { // 增加烟花生成的频率
+                createFirework();
+            }
+            updateFireworks();
+            updateParticles();
+            drawFireworks();
+            requestAnimationFrame(animate);
+        }
+
+        function playExplosionSound() {
+            const explosionSound = new Audio('explosion.mp3');
+            explosionSound.play();
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>
