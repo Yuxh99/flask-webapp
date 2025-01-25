@@ -40,6 +40,7 @@
         <span>新年快乐！愿新的一年如烟花般灿烂！</span>
     </div>
     <audio id="fireworks-music" autoplay loop>
+        <source src="fireworks.ogg" type="audio/ogg">
         <source src="fireworks.mp3" type="audio/mpeg">
         您的浏览器不支持音频元素。
     </audio>
@@ -161,6 +162,13 @@
         function playExplosionSound() {
             const explosionSound = new Audio('explosion.mp3');
             explosionSound.play();
+        }
+        
+                // 在页面加载完成后延迟1秒播放音乐
+        window.onload = function() {
+            setTimeout(function() {
+                document.getElementById('fireworks-music').play();
+            }, 1000);
         }
 
         animate();
